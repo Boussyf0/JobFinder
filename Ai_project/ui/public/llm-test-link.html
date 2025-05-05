@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Test Link</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f7f7f7;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .link-button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .recommended {
+            border: 2px solid #10b981;
+            position: relative;
+        }
+        .recommended::after {
+            content: "RECOMMENDED";
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background-color: #10b981;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .link-button:hover {
+            background-color: #4338ca;
+        }
+        .link-button.secondary {
+            background-color: #6b7280;
+        }
+        .link-button.secondary:hover {
+            background-color: #4b5563;
+        }
+        .info {
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .troubleshooting {
+            margin-top: 2rem;
+            text-align: left;
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .troubleshooting h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: #334155;
+        }
+        .troubleshooting ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0;
+        }
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background-color: #fff7ed;
+            border-left-color: #f97316;
+            color: #9a3412;
+        }
+        
+        .alert h3 {
+            margin-top: 0;
+            font-size: 1rem;
+        }
+        
+        .alert p {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Local LLM Testing Links</h1>
+        <p>Use these links to access the Local LLM test page:</p>
+        
+        <div class="alert">
+            <h3>Library Loading Issues Detected</h3>
+            <p>We've detected issues loading the WebLLM library from CDN sources. Please try our fallback solutions below.</p>
+        </div>
+        
+        <div class="links">
+            <a href="/mixtral-test.html" class="link-button recommended">
+                Mixtral 8x7B Test (Recommended)
+            </a>
+            <a href="/local-fallback.html" class="link-button">
+                WebLLM Fallback Solutions
+            </a>
+            <a href="/tiny-llm-test.html" class="link-button">
+                TinyLlama Test (Smaller Model)
+            </a>
+            <a href="/webllm-quick-test.html" class="link-button">
+                WebLLM Quick Test (Library Check)
+            </a>
+            <div style="height: 10px"></div>
+            <a href="/simple-llm-test.html" class="link-button">
+                Simple LLM Test Page
+            </a>
+            <a href="/direct-llm-test.html" class="link-button">
+                Direct LLM Test Page
+            </a>
+            <a href="/debug/local-llm-test" class="link-button">
+                App Router: /debug/local-llm-test
+            </a>
+            <div style="height: 10px"></div>
+            <a href="/debug" class="link-button secondary">
+                Debug Dashboard
+            </a>
+            <a href="/" class="link-button secondary">
+                Home Page
+            </a>
+        </div>
+        
+        <div class="troubleshooting">
+            <h2>WebLLM Loading Issues:</h2>
+            <ul>
+                <li><strong>Failed to load the library</strong> - We've created a troubleshooting page with additional options</li>
+                <li><strong>Try the local fallback option</strong> - This allows you to download the library and use it locally</li>
+                <li><strong>Try TinyLlama</strong> - A smaller model that requires less memory and resources</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <p>If you're experiencing loading errors, use the WebLLM Fallback Solutions or TinyLlama options above.</p>
+            <p>Current server URL: <script>document.write(window.location.origin)</script></p>
+        </div>
+    </div>
+</body>
+</html> 

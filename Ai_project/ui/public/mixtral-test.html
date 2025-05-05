@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mixtral 8x7B Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        
+        h1, h2 {
+            color: #2563eb;
+        }
+        
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .success { background-color: #10b981; }
+        .error { background-color: #ef4444; }
+        .pending { background-color: #f59e0b; }
+        .loading { background-color: #60a5fa; }
+        
+        .status-text {
+            font-weight: 500;
+        }
+        
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #eff6ff;
+            font-size: 14px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 15px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        .output {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            white-space: pre-wrap;
+        }
+        
+        .error-message {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+        
+        .links {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mixtral 8x7B Test</h1>
+    <p>This page tests running the Mixtral 8x7B model locally in your browser using WebLLM.</p>
+    
+    <div class="card">
+        <h2>Mixtral 8x7B Instruct</h2>
+        <p>
+            Mixtral 8x7B is a Mixture of Experts (MoE) model with 8 experts each of 7B parameters. 
+            Only 2 experts are active for each token, making the compute similar to a 13B parameter model.
+            It delivers strong performance across benchmarks, with particularly strong multilingual capabilities.
+        </p>
+        <div class="info">
+            <strong>Note:</strong> This model requires significant resources (~6GB of GPU memory). 
+            Make sure your device has sufficient resources or try the TinyLlama alternative for lower-resource environments.
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Library Status</h2>
+        <div class="status-indicator">
+            <div id="library-indicator" class="indicator pending"></div>
+            <span class="status-text">WebLLM Library: <span id="library-status">Checking...</span></span>
+        </div>
+        <div class="status-indicator">
+            <div id="load-method-indicator" class="indicator pending"></div>
+            <span class="status-text">Loading Method: <span id="load-method">Not selected</span></span>
+        </div>
+        <div>
+            <button id="check-library">Check Primary CDN</button>
+            <button id="check-alternate">Try Alternate CDN</button>
+            <button id="try-umd">Try UMD Script</button>
+            <button id="use-local-lib">Use Local Library</button>
+            <button id="use-local-copy">Use Project Copy</button>
+            <button id="use-embedded">Use Embedded Library</button>
+            <button id="use-stub">Use Stub Library</button>
+        </div>
+        <div id="library-error" class="error-message" style="display: none;"></div>
+        <div id="local-lib-instructions" style="display: none; margin-top: 15px; padding: 10px; background-color: #f9fafb; border-radius: 4px;">
+            <h3 style="margin-top: 0;">Local Library Setup</h3>
+            <ol style="padding-left: 20px;">
+                <li>Download the WebLLM library: <a href="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/webllm.umd.min.js" download target="_blank">webllm.umd.min.js</a></li>
+                <li>Save it to your computer</li>
+                <li>Click "Browse..." below and select the downloaded file</li>
+            </ol>
+            <input type="file" id="local-lib-file" accept=".js" style="margin-top: 10px;">
+            
+            <div style="margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+                <h4 style="margin-top: 0;">Build from Source</h4>
+                <p>If the CDN links don't work, you can build the library from source:</p>
+                <pre style="background-color: #f1f5f9; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">git clone https://github.com/mlc-ai/web-llm.git
+cd web-llm
+npm install
+npm run build</pre>
+                <p>Then find the built files in <code>web-llm/dist/</code> directory.</p>
+                <p><a href="/lib/webllm-build-instructions.html" target="_blank">View detailed build instructions →</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Model Initialization</h2>
+        <div class="status-indicator">
+            <div id="model-indicator" class="indicator pending"></div>
+            <span class="status-text">Mixtral 8x7B: <span id="model-status">Not initialized</span></span>
+        </div>
+        <button id="init-button" disabled>Initialize Mixtral</button>
+        <div id="progress" class="progress" style="display: none;"></div>
+    </div>
+    
+    <div class="card" id="generation-card" style="display: none;">
+        <h2>Generate with Mixtral</h2>
+        <p>Enter your prompt:</p>
+        <textarea id="prompt-input" rows="5" placeholder="Enter your prompt here...">Generate a job interview question for a senior React developer position that tests their knowledge of TypeScript and state management.</textarea>
+        <div>
+            <button id="generate-button">Generate</button>
+            <button id="clear-button">Clear Output</button>
+        </div>
+        <div id="output" class="output" style="display: none;"></div>
+    </div>
+    
+    <div class="links">
+        <a href="/llm-test-link.html">← Back to Test Links</a>
+    </div>
+    
+    <script type="module">
+        // Import WebLLM as ES module
+        let webllmModule;
+        let llm = null;
+        let loadedViaUMD = false;
+        
+        // Elements
+        const libraryIndicator = document.getElementById('library-indicator');
+        const libraryStatus = document.getElementById('library-status');
+        const libraryError = document.getElementById('library-error');
+        const loadMethodIndicator = document.getElementById('load-method-indicator');
+        const loadMethod = document.getElementById('load-method');
+        const checkLibraryButton = document.getElementById('check-library');
+        const checkAlternateButton = document.getElementById('check-alternate');
+        const tryUMDButton = document.getElementById('try-umd');
+        const useLocalLibButton = document.getElementById('use-local-lib');
+        const localLibInstructions = document.getElementById('local-lib-instructions');
+        const localLibFile = document.getElementById('local-lib-file');
+        const modelIndicator = document.getElementById('model-indicator');
+        const modelStatus = document.getElementById('model-status');
+        const initButton = document.getElementById('init-button');
+        const progress = document.getElementById('progress');
+        const generationCard = document.getElementById('generation-card');
+        const promptInput = document.getElementById('prompt-input');
+        const generateButton = document.getElementById('generate-button');
+        const clearButton = document.getElementById('clear-button');
+        const output = document.getElementById('output');
+        
+        // CDN URLs
+        const PRIMARY_CDN = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/index.js';
+        const ALTERNATE_CDN = 'https://unpkg.com/@mlc-ai/web-llm/dist/index.js';
+        const UMD_CDN = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/webllm.umd.min.js';
+        const UMD_ALTERNATE = 'https://unpkg.com/@mlc-ai/web-llm/dist/webllm.umd.min.js';
+        const STUB_LIBRARY = '/lib/manually-built-webllm.js';
+        const LOCAL_COPY = '/lib/web-llm/webllm.js';
+        const WRAPPER_SCRIPT = '/lib/web-llm/webllm-wrapper.js';
+        
+        // Check if WebLLM library is available via primary CDN
+        async function checkLibrary() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Checking primary CDN...';
+            
+            try {
+                webllmModule = await import(PRIMARY_CDN);
+                
+                if (webllmModule && webllmModule.WebLLM) {
+                    libraryIndicator.className = 'indicator success';
+                    libraryStatus.textContent = 'Available from primary CDN';
+                    loadMethodIndicator.className = 'indicator success';
+                    loadMethod.textContent = 'ES Module import (primary CDN)';
+                    initButton.disabled = false;
+                    return true;
+                } else {
+                    throw new Error('WebLLM class not found in the imported module');
+                }
+            } catch (error) {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load from primary CDN';
+                libraryError.textContent = `Error: ${error.message}`;
+                libraryError.style.display = 'block';
+                return false;
+            }
+        }
+        
+        // Check alternate CDN
+        async function checkAlternateCDN() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Checking alternate CDN...';
+            
+            try {
+                webllmModule = await import(ALTERNATE_CDN);
+                
+                if (webllmModule && webllmModule.WebLLM) {
+                    libraryIndicator.className = 'indicator success';
+                    libraryStatus.textContent = 'Available from alternate CDN';
+                    loadMethodIndicator.className = 'indicator success';
+                    loadMethod.textContent = 'ES Module import (alternate CDN)';
+                    initButton.disabled = false;
+                    return true;
+                } else {
+                    throw new Error('WebLLM class not found in the imported module');
+                }
+            } catch (error) {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load from alternate CDN';
+                libraryError.textContent = `Error: ${error.message}`;
+                libraryError.style.display = 'block';
+                return false;
+            }
+        }
+        
+        // Try UMD script tag loading
+        function tryUMDLoading() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Trying UMD script...';
+            
+            const script = document.createElement('script');
+            script.src = UMD_CDN;
+            
+            script.onload = function() {
+                if (window.webllm && window.webllm.WebLLM) {
+                    libraryIndicator.className = 'indicator success';
+                    libraryStatus.textContent = 'UMD script loaded successfully';
+                    loadMethodIndicator.className = 'indicator success';
+                    loadMethod.textContent = 'UMD script tag';
+                    webllmModule = window.webllm;
+                    loadedViaUMD = true;
+                    initButton.disabled = false;
+                } else {
+                    // Try alternate UMD source
+                    const alternateScript = document.createElement('script');
+                    alternateScript.src = UMD_ALTERNATE;
+                    
+                    alternateScript.onload = function() {
+                        if (window.webllm && window.webllm.WebLLM) {
+                            libraryIndicator.className = 'indicator success';
+                            libraryStatus.textContent = 'UMD script loaded successfully (alternate)';
+                            loadMethodIndicator.className = 'indicator success';
+                            loadMethod.textContent = 'UMD script tag (alternate)';
+                            webllmModule = window.webllm;
+                            loadedViaUMD = true;
+                            initButton.disabled = false;
+                        } else {
+                            libraryIndicator.className = 'indicator error';
+                            libraryStatus.textContent = 'UMD loading failed';
+                            libraryError.textContent = 'WebLLM global not defined after script load';
+                            libraryError.style.display = 'block';
+                        }
+                    };
+                    
+                    alternateScript.onerror = function() {
+                        libraryIndicator.className = 'indicator error';
+                        libraryStatus.textContent = 'UMD loading failed';
+                        libraryError.textContent = 'Failed to load UMD script from alternate source';
+                        libraryError.style.display = 'block';
+                    };
+                    
+                    document.head.appendChild(alternateScript);
+                }
+            };
+            
+            script.onerror = function() {
+                // Try alternate source automatically
+                const alternateScript = document.createElement('script');
+                alternateScript.src = UMD_ALTERNATE;
+                
+                alternateScript.onload = function() {
+                    if (window.webllm && window.webllm.WebLLM) {
+                        libraryIndicator.className = 'indicator success';
+                        libraryStatus.textContent = 'UMD script loaded successfully (alternate)';
+                        loadMethodIndicator.className = 'indicator success';
+                        loadMethod.textContent = 'UMD script tag (alternate)';
+                        webllmModule = window.webllm;
+                        loadedViaUMD = true;
+                        initButton.disabled = false;
+                    } else {
+                        libraryIndicator.className = 'indicator error';
+                        libraryStatus.textContent = 'UMD loading failed';
+                        libraryError.textContent = 'WebLLM global not defined after script load';
+                        libraryError.style.display = 'block';
+                    }
+                };
+                
+                alternateScript.onerror = function() {
+                    libraryIndicator.className = 'indicator error';
+                    libraryStatus.textContent = 'UMD loading failed';
+                    libraryError.textContent = 'Failed to load UMD script from both sources';
+                    libraryError.style.display = 'block';
+                };
+                
+                document.head.appendChild(alternateScript);
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Use local library
+        function useLocalLibrary() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Waiting for local file...';
+            localLibInstructions.style.display = 'block';
+        }
+        
+        // Handle local file selection
+        localLibFile.addEventListener('change', function(e) {
+            if (!e.target.files.length) return;
+            
+            const file = e.target.files[0];
+            const url = URL.createObjectURL(file);
+            
+            // Create script element to load UMD module
+            const script = document.createElement('script');
+            script.src = url;
+            script.onload = function() {
+                if (window.webllm && window.webllm.WebLLM) {
+                    libraryIndicator.className = 'indicator success';
+                    libraryStatus.textContent = 'Local library loaded successfully';
+                    loadMethodIndicator.className = 'indicator success';
+                    loadMethod.textContent = 'UMD local file';
+                    webllmModule = window.webllm;
+                    initButton.disabled = false;
+                } else {
+                    libraryIndicator.className = 'indicator error';
+                    libraryStatus.textContent = 'Invalid library file';
+                    libraryError.textContent = 'The selected file does not contain the WebLLM module';
+                    libraryError.style.display = 'block';
+                }
+            };
+            script.onerror = function() {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load local file';
+                libraryError.textContent = 'Could not load the selected file';
+                libraryError.style.display = 'block';
+            };
+            
+            document.head.appendChild(script);
+        });
+        
+        // Reset library status display
+        function resetLibraryStatus() {
+            libraryIndicator.className = 'indicator pending';
+            loadMethodIndicator.className = 'indicator pending';
+            libraryStatus.textContent = 'Checking...';
+            loadMethod.textContent = 'Not selected';
+            libraryError.style.display = 'none';
+            localLibInstructions.style.display = 'none';
+            initButton.disabled = true;
+        }
+        
+        // Initialize Mixtral model
+        async function initializeModel() {
+            modelIndicator.className = 'indicator loading';
+            modelStatus.textContent = 'Initializing...';
+            initButton.disabled = true;
+            progress.textContent = 'Starting initialization...';
+            progress.style.display = 'block';
+            
+            try {
+                // Create a new WebLLM instance based on the loading method
+                if (loadedViaUMD || (window.webllm && window.webllm.WebLLM)) {
+                    llm = new window.webllm.WebLLM();
+                } else if (webllmModule && webllmModule.WebLLM) {
+                    llm = new webllmModule.WebLLM();
+                } else {
+                    throw new Error('WebLLM constructor not found');
+                }
+                
+                // Set progress callback
+                llm.setProgressCallback((current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    progress.textContent = `Loading model: ${percent}% (${current}/${total})`;
+                });
+                
+                // Load Mixtral model
+                await llm.reload({
+                    model: 'Mixtral-8x7B-Instruct-v0.1-q4f16_1',
+                    modelUrl: 'https://huggingface.co/mlc-ai/Mixtral-8x7B-Instruct-v0.1-q4f16_1/resolve/main/',
+                    maxTokens: 2048
+                });
+                
+                modelIndicator.className = 'indicator success';
+                modelStatus.textContent = 'Ready';
+                progress.textContent = 'Model loaded successfully';
+                generationCard.style.display = 'block';
+                return true;
+                
+            } catch (error) {
+                modelIndicator.className = 'indicator error';
+                modelStatus.textContent = 'Failed';
+                progress.textContent = `Error: ${error.message || error}`;
+                initButton.disabled = false;
+                return false;
+            }
+        }
+        
+        // Generate text using the model
+        async function generateText() {
+            if (!llm) return;
+            
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                output.textContent = 'Please enter a prompt';
+                output.style.display = 'block';
+                return;
+            }
+            
+            generateButton.disabled = true;
+            output.textContent = 'Generating...';
+            output.style.display = 'block';
+            
+            try {
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 512,
+                    temperature: 0.7,
+                    top_p: 0.95
+                });
+                
+                output.textContent = response.output.trim();
+            } catch (error) {
+                output.textContent = `Error: ${error.message || error}`;
+            } finally {
+                generateButton.disabled = false;
+            }
+        }
+        
+        // Use embedded library (fallback when all else fails)
+        function useEmbeddedLibrary() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Loading embedded library...';
+            
+            try {
+                // Define the WebLLM minimal required functionality for local testing
+                window.webllm = {
+                    WebLLM: class WebLLM {
+                        constructor() {
+                            this.progressCallback = null;
+                            this.isInitialized = false;
+                        }
+                        
+                        setProgressCallback(callback) {
+                            this.progressCallback = callback;
+                        }
+                        
+                        async reload(config) {
+                            // Simulate loading
+                            const totalSteps = 10;
+                            for (let i = 1; i <= totalSteps; i++) {
+                                if (this.progressCallback) {
+                                    this.progressCallback(i, totalSteps);
+                                }
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                            }
+                            this.isInitialized = true;
+                            return true;
+                        }
+                        
+                        async generate(prompt, options) {
+                            if (!this.isInitialized) {
+                                throw new Error("Model not initialized");
+                            }
+                            
+                            // Simulate generation
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+                            
+                            // Return a simulated response for testing UI only
+                            return {
+                                output: "This is a simulated response from the embedded library.\n\nYour prompt was: \"" + prompt + "\"\n\nNote: This is not actually using Mixtral 8x7B. This is a placeholder implementation for UI testing when WebLLM cannot be loaded from any source.",
+                                tokens: prompt.split(/\s+/).length + 50,
+                            };
+                        }
+                    }
+                };
+                
+                libraryIndicator.className = 'indicator success';
+                libraryStatus.textContent = 'Embedded library loaded';
+                loadMethodIndicator.className = 'indicator success';
+                loadMethod.textContent = 'Embedded stub (simulation only)';
+                webllmModule = window.webllm;
+                loadedViaUMD = true;
+                initButton.disabled = false;
+                
+                // Add warning about embedded library
+                libraryError.className = 'error-message';
+                libraryError.style.backgroundColor = '#fff3cd';
+                libraryError.style.color = '#856404';
+                libraryError.style.borderLeftColor = '#ffeeba';
+                libraryError.textContent = 'WARNING: Using embedded stub library. This only simulates responses and does NOT use the actual Mixtral model. For testing UI flow only.';
+                libraryError.style.display = 'block';
+                
+            } catch (error) {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load embedded library';
+                libraryError.textContent = `Error: ${error.message}`;
+                libraryError.style.display = 'block';
+            }
+        }
+        
+        // Use local copy in the project
+        function useLocalCopy() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Loading from project copy...';
+            
+            // Add event listener for when WebLLM is ready (from the wrapper)
+            window.addEventListener('webllm-ready', function() {
+                if (window.webllm && window.webllm.WebLLM) {
+                    libraryIndicator.className = 'indicator success';
+                    libraryStatus.textContent = 'Project copy loaded successfully';
+                    loadMethodIndicator.className = 'indicator success';
+                    loadMethod.textContent = 'Local project copy (wrapper)';
+                    webllmModule = window.webllm;
+                    loadedViaUMD = true;
+                    initButton.disabled = false;
+                    
+                    // Add warning if it's using the fallback wrapper
+                    if (window.webllm.version && window.webllm.version.includes('fallback')) {
+                        libraryError.className = 'error-message';
+                        libraryError.style.backgroundColor = '#fff3cd';
+                        libraryError.style.color = '#856404';
+                        libraryError.style.borderLeftColor = '#ffeeba';
+                        libraryError.textContent = 'Using fallback wrapper implementation. This simulates responses and does NOT use the actual Mixtral model.';
+                        libraryError.style.display = 'block';
+                    }
+                }
+            }, { once: true });
+            
+            // Add event listener for errors
+            window.addEventListener('webllm-error', function(event) {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load project copy';
+                libraryError.textContent = `Error: ${event.detail?.error || 'Unknown error'}`;
+                libraryError.style.display = 'block';
+            }, { once: true });
+            
+            // Load the wrapper script
+            const script = document.createElement('script');
+            script.src = WRAPPER_SCRIPT;
+            script.onerror = function() {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load wrapper script';
+                libraryError.textContent = `Error loading wrapper script from ${WRAPPER_SCRIPT}`;
+                libraryError.style.display = 'block';
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Use our manually built stub library
+        function useStubLibrary() {
+            resetLibraryStatus();
+            libraryStatus.textContent = 'Loading stub library...';
+            
+            const script = document.createElement('script');
+            script.src = STUB_LIBRARY;
+            
+            script.onload = function() {
+                if (window.webllm && window.webllm.WebLLM) {
+                    libraryIndicator.className = 'indicator success';
+                    libraryStatus.textContent = 'Stub library loaded successfully';
+                    loadMethodIndicator.className = 'indicator success';
+                    loadMethod.textContent = 'Local stub implementation (simulation)';
+                    webllmModule = window.webllm;
+                    loadedViaUMD = true;
+                    initButton.disabled = false;
+                    
+                    // Add warning
+                    libraryError.className = 'error-message';
+                    libraryError.style.backgroundColor = '#fff3cd';
+                    libraryError.style.color = '#856404';
+                    libraryError.style.borderLeftColor = '#ffeeba';
+                    libraryError.textContent = 'Using local stub implementation (version ' + 
+                        (window.webllm.version || 'unknown') + '). This does NOT use actual models.';
+                    libraryError.style.display = 'block';
+                } else {
+                    libraryIndicator.className = 'indicator error';
+                    libraryStatus.textContent = 'Failed to load stub library';
+                    libraryError.textContent = 'WebLLM global not defined after loading the stub library';
+                    libraryError.style.display = 'block';
+                }
+            };
+            
+            script.onerror = function() {
+                libraryIndicator.className = 'indicator error';
+                libraryStatus.textContent = 'Failed to load stub library';
+                libraryError.textContent = 'Could not load the stub library file. Check that ' + STUB_LIBRARY + ' exists.';
+                libraryError.style.display = 'block';
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Event listeners
+        checkLibraryButton.addEventListener('click', checkLibrary);
+        checkAlternateButton.addEventListener('click', checkAlternateCDN);
+        tryUMDButton.addEventListener('click', tryUMDLoading);
+        useLocalLibButton.addEventListener('click', useLocalLibrary);
+        document.getElementById('use-local-copy').addEventListener('click', useLocalCopy);
+        document.getElementById('use-embedded').addEventListener('click', useEmbeddedLibrary);
+        document.getElementById('use-stub').addEventListener('click', useStubLibrary);
+        initButton.addEventListener('click', initializeModel);
+        generateButton.addEventListener('click', generateText);
+        clearButton.addEventListener('click', () => {
+            output.textContent = '';
+            output.style.display = 'none';
+        });
+        
+        // Check library on page load
+        checkLibrary();
+    </script>
+</body>
+</html> 

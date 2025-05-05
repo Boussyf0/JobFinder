@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebLLM Quick Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .success { background-color: #10b981; }
+        .error { background-color: #ef4444; }
+        .pending { background-color: #f59e0b; }
+        
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        
+        .links {
+            margin-top: 20px;
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .message.error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        
+        .message.success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebLLM Quick Test</h1>
+    <p>This page will test if WebLLM can be loaded in your browser environment.</p>
+    
+    <div class="card">
+        <h2>Library Loading Tests</h2>
+        
+        <div class="status">
+            <div id="umd-indicator" class="indicator pending"></div>
+            <div>UMD Loading (script tag): <span id="umd-status">Pending</span></div>
+        </div>
+        
+        <div class="status">
+            <div id="esm-indicator" class="indicator pending"></div>
+            <div>ESM Loading (import): <span id="esm-status">Pending</span></div>
+        </div>
+        
+        <div id="error-message" class="message error" style="display: none;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Model Configuration</h2>
+        <p>Select a model to test:</p>
+        <select id="model-select" style="padding: 8px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+            <option value="Mixtral-8x7B-Instruct-v0.1-q4f16_1">Mixtral 8x7B Instruct (Default)</option>
+            <option value="TinyLlama-1.1B-Chat-v1.0-q4f16_1">TinyLlama 1.1B (Smaller)</option>
+            <option value="Llama-2-7b-chat-hf-q4f16_1">Llama 2 7B Chat</option>
+        </select>
+        
+        <div class="status">
+            <div id="model-indicator" class="indicator pending"></div>
+            <div>Model status: <span id="model-status">Not initialized</span></div>
+        </div>
+        
+        <button id="init-button" disabled>Initialize LLM</button>
+        <div id="progress" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="card" id="question-card" style="display: none;">
+        <h2>Generate with Mixtral</h2>
+        <p>Enter your prompt or use the default interview question prompt:</p>
+        <textarea id="prompt-input" rows="4" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #e5e7eb;">Generate a professional interview question for a Frontend Developer position related to React and TypeScript.</textarea>
+        <button id="generate-button">Generate Response</button>
+        <div id="question-container" class="message" style="display: none; margin-top: 15px;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Actions</h2>
+        <button id="test-button">Run Tests</button>
+        <button id="clear-button">Clear Results</button>
+    </div>
+    
+    <div class="links">
+        <a href="/llm-test-link.html">← Back to Test Links</a>
+    </div>
+    
+    <script>
+        // Elements
+        const umdIndicator = document.getElementById('umd-indicator');
+        const umdStatus = document.getElementById('umd-status');
+        const esmIndicator = document.getElementById('esm-indicator');
+        const esmStatus = document.getElementById('esm-status');
+        const errorMessage = document.getElementById('error-message');
+        const testButton = document.getElementById('test-button');
+        const clearButton = document.getElementById('clear-button');
+        
+        // Test UMD loading
+        function testUMDLoading() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/web-llm.umd.js';
+                script.async = true;
+                
+                script.onload = () => {
+                    if (window.webllm) {
+                        umdIndicator.className = 'indicator success';
+                        umdStatus.textContent = 'Success! UMD library loaded';
+                        resolve(true);
+                    } else {
+                        umdIndicator.className = 'indicator error';
+                        umdStatus.textContent = 'Failed: window.webllm not defined';
+                        resolve(false);
+                    }
+                };
+                
+                script.onerror = (e) => {
+                    umdIndicator.className = 'indicator error';
+                    umdStatus.textContent = 'Failed to load UMD script';
+                    resolve(false);
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Test ESM loading
+        async function testESMLoading() {
+            try {
+                const webllmModule = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/index.js');
+                
+                if (webllmModule && webllmModule.WebLLM) {
+                    esmIndicator.className = 'indicator success';
+                    esmStatus.textContent = 'Success! ESM module loaded';
+                    return true;
+                } else {
+                    esmIndicator.className = 'indicator error';
+                    esmStatus.textContent = 'Failed: WebLLM class not found in module';
+                    return false;
+                }
+            } catch (error) {
+                esmIndicator.className = 'indicator error';
+                esmStatus.textContent = 'Failed to import ESM module';
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.style.display = 'block';
+                return false;
+            }
+        }
+        
+        // Run tests
+        testButton.addEventListener('click', async () => {
+            testButton.disabled = true;
+            errorMessage.style.display = 'none';
+            
+            try {
+                const umdResult = await testUMDLoading();
+                const esmResult = await testESMLoading();
+                
+                if (umdResult || esmResult) {
+                    errorMessage.className = 'message success';
+                    errorMessage.textContent = 'At least one library loading method succeeded! WebLLM should work in your environment.';
+                    errorMessage.style.display = 'block';
+                    document.getElementById('init-button').disabled = false;
+                    document.getElementById('model-indicator').className = 'indicator pending';
+                    document.getElementById('model-status').textContent = 'Ready to initialize';
+                } else {
+                    errorMessage.className = 'message error';
+                    errorMessage.textContent = 'All loading methods failed. Please try the fallback solutions from the test links page.';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.className = 'message error';
+                errorMessage.textContent = `Unexpected error: ${error.message}`;
+                errorMessage.style.display = 'block';
+            } finally {
+                testButton.disabled = false;
+            }
+        });
+        
+        // Clear results
+        clearButton.addEventListener('click', () => {
+            umdIndicator.className = 'indicator pending';
+            umdStatus.textContent = 'Pending';
+            esmIndicator.className = 'indicator pending';
+            esmStatus.textContent = 'Pending';
+            errorMessage.style.display = 'none';
+        });
+        
+        // Initialize LLM model
+        const initButtonEl = document.getElementById('init-button');
+        const modelStatusEl = document.getElementById('model-status');
+        const modelIndicatorEl = document.getElementById('model-indicator');
+        const progressEl = document.getElementById('progress');
+        const questionCardEl = document.getElementById('question-card');
+        const generateButtonEl = document.getElementById('generate-button');
+        const questionContainerEl = document.getElementById('question-container');
+        const modelSelectEl = document.getElementById('model-select');
+        
+        // Global model instance
+        let llm = null;
+        
+        // Initialize LLM
+        initButtonEl.addEventListener('click', async () => {
+            const selectedModel = modelSelectEl.value;
+            modelStatusEl.textContent = 'Initializing...';
+            modelIndicatorEl.className = 'indicator pending';
+            initButtonEl.disabled = true;
+            progressEl.textContent = 'Starting initialization...';
+            progressEl.style.display = 'block';
+            progressEl.className = 'status loading';
+            questionCardEl.style.display = 'none';
+            
+            try {
+                // Create a WebLLM instance using the available method
+                let webllmConstructor;
+                if (window.webllm && window.webllm.WebLLM) {
+                    // UMD loading
+                    webllmConstructor = window.webllm.WebLLM;
+                } else {
+                    // ESM loading
+                    const webllmModule = await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/index.js');
+                    webllmConstructor = webllmModule.WebLLM;
+                }
+                
+                // Create a new WebLLM instance
+                llm = new webllmConstructor();
+                
+                // Set progress callback
+                llm.setProgressCallback((current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    progressEl.textContent = `Loading model: ${percent}% (${current}/${total})`;
+                });
+                
+                // Get model URL based on selection
+                let modelUrl;
+                if (selectedModel === 'Mixtral-8x7B-Instruct-v0.1-q4f16_1') {
+                    modelUrl = 'https://huggingface.co/mlc-ai/Mixtral-8x7B-Instruct-v0.1-q4f16_1/resolve/main/';
+                } else if (selectedModel === 'TinyLlama-1.1B-Chat-v1.0-q4f16_1') {
+                    modelUrl = 'https://huggingface.co/mlc-ai/tinyllama-1.1b-chat-v1.0-q4f16_1/resolve/main/';
+                } else if (selectedModel === 'Llama-2-7b-chat-hf-q4f16_1') {
+                    modelUrl = 'https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f16_1/resolve/main/';
+                }
+                
+                // Load the model
+                await llm.reload({
+                    model: selectedModel,
+                    modelUrl: modelUrl,
+                    maxTokens: 1024
+                });
+                
+                modelStatusEl.textContent = 'Initialized successfully!';
+                modelIndicatorEl.className = 'indicator success';
+                progressEl.textContent = 'Model loaded successfully';
+                progressEl.className = 'status success';
+                questionCardEl.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error initializing LLM:', error);
+                progressEl.textContent = `Error: ${error.message || error}`;
+                progressEl.className = 'status error';
+                modelStatusEl.textContent = 'Error during initialization';
+                modelIndicatorEl.className = 'indicator error';
+                initButtonEl.disabled = false;
+            }
+        });
+        
+        // Generate question
+        generateButtonEl.addEventListener('click', async () => {
+            if (!llm) return;
+            
+            generateButtonEl.disabled = true;
+            questionContainerEl.style.display = 'none';
+            
+            try {
+                const promptInput = document.getElementById('prompt-input');
+                const prompt = promptInput.value.trim() || `
+Generate a professional interview question for a Frontend Developer position.
+The question should test both technical knowledge and problem-solving skills relevant to React, TypeScript, and modern web technologies.
+Keep your response concise and formatted as just the question text.
+`;
+
+                questionContainerEl.textContent = 'Generating...';
+                questionContainerEl.style.display = 'block';
+                questionContainerEl.className = 'status loading';
+                
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 512,
+                    temperature: 0.7
+                });
+                
+                // Display the question
+                questionContainerEl.textContent = response.output.trim();
+                questionContainerEl.className = 'status success';
+                
+            } catch (error) {
+                console.error('Error generating response:', error);
+                questionContainerEl.textContent = `Error: ${error.message || error}`;
+                questionContainerEl.style.display = 'block';
+                questionContainerEl.className = 'status error';
+            } finally {
+                generateButtonEl.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebLLM Local Fallback</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1, h2, h3 {
+            color: #2563eb;
+        }
+        
+        .box {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .warning {
+            background-color: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+        
+        .steps {
+            counter-reset: step-counter;
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .steps li {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 24px;
+        }
+        
+        .steps li::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            background-color: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background-color: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            overflow: auto;
+            font-size: 0.9em;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .alternative {
+            margin-top: 30px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebLLM Local Fallback Solution</h1>
+    <p>If you're experiencing issues loading WebLLM from CDN sources, you can use a local copy of the library instead.</p>
+    
+    <div class="warning">
+        <strong>Connection Issue Detected!</strong> It appears you're having trouble loading the WebLLM library from online sources. This could be due to network restrictions, firewall settings, or browser configuration.
+    </div>
+    
+    <div class="box">
+        <h2>Option 1: Save the Library Locally</h2>
+        <ol class="steps">
+            <li>
+                <h3>Download the WebLLM Library</h3>
+                <p>Click the button below to download the WebLLM library:</p>
+                <a href="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.26/dist/web-llm.umd.js" download="web-llm.umd.js" class="button">Download WebLLM</a>
+                <p><small>If the direct download doesn't work, right-click the button and select "Save Link As..."</small></p>
+            </li>
+            <li>
+                <h3>Save the File in the Project</h3>
+                <p>Save the downloaded file to your project's public directory:</p>
+                <code>/Users/abderrahim_boussyf/Ai_project/ui/public/assets/</code>
+                <p>If the assets directory doesn't exist, create it first.</p>
+            </li>
+            <li>
+                <h3>Create a New Test File</h3>
+                <p>Create a new file named <code>local-test.html</code> in the public directory with the following content:</p>
+                <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Local WebLLM Test&lt;/title&gt;
+    &lt;!-- Use locally saved library --&gt;
+    &lt;script src="/assets/web-llm.umd.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Local WebLLM Test&lt;/h1&gt;
+    &lt;p&gt;Status: &lt;span id="status"&gt;Not initialized&lt;/span&gt;&lt;/p&gt;
+    &lt;button id="init-button"&gt;Initialize LLM&lt;/button&gt;
+    
+    &lt;script&gt;
+        document.getElementById('init-button').addEventListener('click', async () => {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = 'Initializing...';
+            
+            try {
+                const llm = new WebLLM();
+                await llm.reload({
+                    model: 'Phi-2:Q4_K_M',
+                    modelUrl: 'https://huggingface.co/mlc-ai/phi-2-q4km/resolve/main/',
+                    maxTokens: 768
+                });
+                statusEl.textContent = 'Initialized successfully!';
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+                console.error(error);
+            }
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+            </li>
+            <li>
+                <h3>Access the Local Test Page</h3>
+                <p>Visit <a href="/local-test.html">http://localhost:3000/local-test.html</a> to test the local WebLLM implementation.</p>
+            </li>
+        </ol>
+    </div>
+    
+    <div class="alternative">
+        <h2>Option 2: Use Alternative Smaller Models</h2>
+        
+        <p>If you're still having issues, you can try using smaller models that may be more compatible with your device:</p>
+        
+        <div class="box">
+            <h3>TinyLLM Test</h3>
+            <p>This test uses TinyLlama, a much smaller model (1.1B parameters) that requires less memory:</p>
+            <a href="/tiny-llm-test.html" class="button">Try TinyLLM Test</a>
+            <p><small>Note: TinyLlama has more limited capabilities but requires significantly less resources.</small></p>
+        </div>
+        
+        <div class="box">
+            <h3>Additional Troubleshooting</h3>
+            <ul>
+                <li><strong>Browser compatibility:</strong> WebLLM works best in Chrome and Edge. Firefox may have limited WebGPU support.</li>
+                <li><strong>Memory constraints:</strong> WebLLM requires at least 4GB of available memory.</li>
+                <li><strong>CORS issues:</strong> Some network environments block cross-origin requests.</li>
+                <li><strong>Content blockers:</strong> Ad blockers or privacy extensions might block WebAssembly or certain scripts.</li>
+                <li><strong>Corporate firewalls:</strong> Corporate networks might block access to CDNs or model repositories.</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="box">
+        <h2>Return to Navigation</h2>
+        <p>Go back to the test page selection:</p>
+        <a href="/llm-test-link.html" class="button">Test Links Page</a>
+        <a href="/" class="button">Home Page</a>
+    </div>
+</body>
+</html> 

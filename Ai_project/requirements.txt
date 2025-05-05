@@ -1,0 +1,19 @@
+# Web scraping and API dependencies
+requests>=2.28.1
+beautifulsoup4>=4.11.1
+selenium>=4.7.2
+webdriver-manager>=3.8.5
+
+# Data processing
+pandas>=1.5.2
+numpy>=1.23.5
+tqdm>=4.64.1
+
+# Vector databases and ML
+faiss-cpu>=1.7.3
+sentence-transformers>=2.2.2
+
+# Utilities
+python-dotenv>=0.21.0
+urllib3>=1.26.12
+retry>=0.9.2 

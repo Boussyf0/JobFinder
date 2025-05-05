@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { display: flex; flex-direction: column; align-items: center; }
+        video { width: 100%; max-width: 640px; border: 1px solid #ccc; margin: 20px 0; }
+        button { padding: 10px 20px; margin: 10px; background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .error { color: red; margin: 20px 0; }
+        .success { color: green; margin: 20px 0; }
+        .status { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Camera Test Page</h1>
+        <p>This page tests if your camera is working properly with your browser.</p>
+        
+        <div>
+            <button id="startCamera">Start Camera</button>
+            <button id="stopCamera">Stop Camera</button>
+            <button id="captureFrame">Capture Frame</button>
+        </div>
+        
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        
+        <div id="status" class="status">Camera status: Not started</div>
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+        
+        <div>
+            <h3>Captured Frame:</h3>
+            <img id="capturedImage" style="max-width: 300px; border: 1px solid #ddd; display: none;" />
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const capturedImage = document.getElementById('capturedImage');
+        const errorDisplay = document.getElementById('error');
+        const successDisplay = document.getElementById('success');
+        const statusDisplay = document.getElementById('status');
+        let stream = null;
+
+        // Start camera button
+        document.getElementById('startCamera').addEventListener('click', async () => {
+            errorDisplay.textContent = '';
+            successDisplay.textContent = '';
+            
+            try {
+                statusDisplay.textContent = 'Camera status: Requesting permission...';
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                video.srcObject = stream;
+                statusDisplay.textContent = 'Camera status: Active';
+                successDisplay.textContent = 'Camera started successfully!';
+                console.log('Camera stream:', stream);
+            } catch (err) {
+                errorDisplay.textContent = `Error accessing camera: ${err.message}`;
+                statusDisplay.textContent = 'Camera status: Error';
+                console.error('Camera error:', err);
+            }
+        });
+
+        // Stop camera button
+        document.getElementById('stopCamera').addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+                statusDisplay.textContent = 'Camera status: Stopped';
+                successDisplay.textContent = 'Camera stopped successfully.';
+            }
+        });
+
+        // Capture frame button
+        document.getElementById('captureFrame').addEventListener('click', () => {
+            if (!stream) {
+                errorDisplay.textContent = 'Camera is not active. Start the camera first.';
+                return;
+            }
+            
+            // Set canvas dimensions to match the video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw the current video frame on the canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert the canvas to a data URL and display it
+            const imageDataUrl = canvas.toDataURL('image/png');
+            capturedImage.src = imageDataUrl;
+            capturedImage.style.display = 'block';
+            
+            successDisplay.textContent = 'Frame captured successfully!';
+            console.log('Frame captured', { width: canvas.width, height: canvas.height });
+        });
+    </script>
+</body>
+</html> 

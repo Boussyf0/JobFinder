@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple LLM Test</title>
+    
+    <!-- Multiple fallback CDN options -->
+    <script>
+        // Track loading status
+        window.webLLMLoaded = false;
+        window.loadingAttempts = 0;
+        
+        function loadWebLLM() {
+            if (window.webLLMLoaded) return;
+            
+            window.loadingAttempts++;
+            if (window.loadingAttempts > 3) {
+                console.error("Failed to load WebLLM after multiple attempts");
+                document.getElementById('loading-error').style.display = 'block';
+                document.getElementById('loading-error').textContent = 
+                    "Failed to load WebLLM library after multiple attempts. Please check your internet connection.";
+                return;
+            }
+            
+            // Create a new script element
+            const script = document.createElement('script');
+            
+            // Set different CDN URLs based on attempt number
+            if (window.loadingAttempts === 1) {
+                script.src = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/web-llm.umd.min.js";
+            } else if (window.loadingAttempts === 2) {
+                script.src = "https://unpkg.com/@mlc-ai/web-llm/dist/web-llm.umd.min.js";
+            } else {
+                script.src = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.26/dist/web-llm.umd.js";
+            }
+            
+            script.onload = function() {
+                console.log("WebLLM loaded successfully from attempt " + window.loadingAttempts);
+                window.webLLMLoaded = true;
+                document.getElementById('loading-status').textContent = "WebLLM loaded successfully!";
+                document.getElementById('init-button').disabled = false;
+            };
+            
+            script.onerror = function() {
+                console.error("Failed to load WebLLM from attempt " + window.loadingAttempts);
+                document.getElementById('loading-status').textContent = 
+                    `Loading attempt ${window.loadingAttempts} failed. Trying alternative source...`;
+                // Try the next CDN
+                setTimeout(loadWebLLM, 1000);
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        // Start loading on page load
+        window.onload = function() {
+            document.getElementById('loading-status').textContent = "Loading WebLLM library...";
+            loadWebLLM();
+        };
+    </script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1, h2 {
+            color: #2563eb;
+        }
+        
+        .box {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        
+        .button:hover:not(:disabled) {
+            background-color: #1d4ed8;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        textarea {
+            min-height: 100px;
+        }
+        
+        .result {
+            background-color: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple WebLLM Test</h1>
+    <p>This page tests the WebLLM library with simplified implementation.</p>
+    
+    <div class="box">
+        <h2>Library Status</h2>
+        <p id="loading-status">Initializing...</p>
+        <div id="loading-error" class="error"></div>
+    </div>
+    
+    <div class="box">
+        <h2>Model Initialization</h2>
+        <p>Status: <span id="model-status">Not initialized</span></p>
+        <div id="model-error" class="error"></div>
+        <button id="init-button" class="button" disabled>Initialize Model</button>
+    </div>
+    
+    <div class="box">
+        <h2>Question Generation</h2>
+        <div>
+            <label for="job-title">Job Title:</label>
+            <input id="job-title" type="text" value="Frontend Developer">
+        </div>
+        <div>
+            <label for="job-skills">Skills (comma separated):</label>
+            <input id="job-skills" type="text" value="React, JavaScript, HTML, CSS">
+        </div>
+        <div id="question-error" class="error"></div>
+        <button id="generate-button" class="button" disabled>Generate Question</button>
+        <div id="question-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="box">
+        <h2>Answer Evaluation</h2>
+        <div>
+            <label for="answer">Your Answer:</label>
+            <textarea id="answer" placeholder="Type your answer here..."></textarea>
+        </div>
+        <div id="eval-error" class="error"></div>
+        <button id="evaluate-button" class="button" disabled>Evaluate Answer</button>
+        <div id="eval-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="box">
+        <h2>Debug Information</h2>
+        <p>If you're experiencing issues:</p>
+        <ol>
+            <li>Check your browser console (F12) for detailed error messages</li>
+            <li>Try a different browser (Chrome is recommended)</li>
+            <li>Ensure your device has enough memory (at least 4GB RAM recommended)</li>
+            <li>Try disabling browser extensions that might interfere with WebAssembly</li>
+        </ol>
+        <p>Your browser: <span id="browser-info"></span></p>
+    </div>
+    
+    <script>
+        // Elements
+        const modelStatusEl = document.getElementById('model-status');
+        const modelErrorEl = document.getElementById('model-error');
+        const initButtonEl = document.getElementById('init-button');
+        const jobTitleEl = document.getElementById('job-title');
+        const jobSkillsEl = document.getElementById('job-skills');
+        const questionErrorEl = document.getElementById('question-error');
+        const generateButtonEl = document.getElementById('generate-button');
+        const questionResultEl = document.getElementById('question-result');
+        const answerEl = document.getElementById('answer');
+        const evalErrorEl = document.getElementById('eval-error');
+        const evaluateButtonEl = document.getElementById('evaluate-button');
+        const evalResultEl = document.getElementById('eval-result');
+        const browserInfoEl = document.getElementById('browser-info');
+        
+        // Show browser info
+        browserInfoEl.textContent = navigator.userAgent;
+        
+        // Global model instance
+        let llm = null;
+        let currentQuestion = '';
+        
+        // Initialize LLM model
+        initButtonEl.addEventListener('click', async () => {
+            modelStatusEl.textContent = 'Initializing...';
+            modelErrorEl.style.display = 'none';
+            initButtonEl.disabled = true;
+            
+            try {
+                if (typeof WebLLM === 'undefined') {
+                    throw new Error('WebLLM library not loaded. Please refresh the page and try again.');
+                }
+                
+                llm = new WebLLM();
+                
+                // Log progress
+                llm.setProgressCallback((current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    modelStatusEl.textContent = `Loading model: ${percent}% (${current}/${total})`;
+                });
+                
+                await llm.reload({
+                    model: 'Phi-2:Q4_K_M',
+                    modelUrl: 'https://huggingface.co/mlc-ai/phi-2-q4km/resolve/main/',
+                    maxTokens: 768
+                });
+                
+                modelStatusEl.textContent = 'Model initialized successfully';
+                generateButtonEl.disabled = false;
+            } catch (error) {
+                console.error('Error initializing model:', error);
+                modelErrorEl.textContent = `Error: ${error.message || 'Unknown error'}`;
+                modelErrorEl.style.display = 'block';
+                modelStatusEl.textContent = 'Initialization failed';
+                initButtonEl.disabled = false;
+            }
+        });
+        
+        // Generate question
+        generateButtonEl.addEventListener('click', async () => {
+            const jobTitle = jobTitleEl.value.trim();
+            const jobSkills = jobSkillsEl.value.split(',').map(s => s.trim());
+            
+            if (!jobTitle) {
+                questionErrorEl.textContent = 'Please enter a job title';
+                questionErrorEl.style.display = 'block';
+                return;
+            }
+            
+            questionErrorEl.style.display = 'none';
+            generateButtonEl.disabled = true;
+            generateButtonEl.textContent = 'Generating...';
+            questionResultEl.style.display = 'none';
+            
+            try {
+                const prompt = `
+Generate 1 professional interview question for a ${jobTitle} position.
+The job requires skills in: ${jobSkills.join(', ')}
+
+The question should test both technical knowledge and soft skills relevant to this role.
+Keep your response concise and formatted as just the question text with no prefixes or labels.
+`;
+
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 256,
+                    temperature: 0.7
+                });
+                
+                // Clean up the response
+                currentQuestion = response.output.trim();
+                
+                // Display the question
+                questionResultEl.textContent = currentQuestion;
+                questionResultEl.style.display = 'block';
+                evaluateButtonEl.disabled = false;
+            } catch (error) {
+                console.error('Error generating question:', error);
+                questionErrorEl.textContent = `Error: ${error.message || 'Unknown error'}`;
+                questionErrorEl.style.display = 'block';
+            } finally {
+                generateButtonEl.disabled = false;
+                generateButtonEl.textContent = 'Generate Question';
+            }
+        });
+        
+        // Evaluate answer
+        evaluateButtonEl.addEventListener('click', async () => {
+            const answer = answerEl.value.trim();
+            
+            if (!currentQuestion || !answer) {
+                evalErrorEl.textContent = 'Please generate a question and provide an answer';
+                evalErrorEl.style.display = 'block';
+                return;
+            }
+            
+            evalErrorEl.style.display = 'none';
+            evaluateButtonEl.disabled = true;
+            evaluateButtonEl.textContent = 'Evaluating...';
+            evalResultEl.style.display = 'none';
+            
+            try {
+                const jobTitle = jobTitleEl.value.trim();
+                const jobSkills = jobSkillsEl.value.split(',').map(s => s.trim());
+                
+                const prompt = `
+You are an AI interview evaluator for a ${jobTitle} position that requires skills in: ${jobSkills.join(', ')}.
+
+Question: "${currentQuestion}"
+Candidate's answer: "${answer}"
+
+Evaluate the answer on a scale of 1-10 for relevance, knowledge, clarity, examples, and overall quality.
+Then provide key strengths, areas for improvement, and a suggestion for improvement.
+
+Keep your response simple and direct.
+`;
+
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 512,
+                    temperature: 0.3
+                });
+                
+                // Format the evaluation text with simple HTML
+                const formattedText = response.output
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/Strengths:/gi, '<strong>Strengths:</strong>')
+                    .replace(/Improvements:/gi, '<strong>Areas for Improvement:</strong>')
+                    .replace(/Suggestion:/gi, '<strong>Suggestion:</strong>');
+                
+                evalResultEl.innerHTML = `<p>${formattedText}</p>`;
+                evalResultEl.style.display = 'block';
+            } catch (error) {
+                console.error('Error evaluating answer:', error);
+                evalErrorEl.textContent = `Error: ${error.message || 'Unknown error'}`;
+                evalErrorEl.style.display = 'block';
+            } finally {
+                evaluateButtonEl.disabled = false;
+                evaluateButtonEl.textContent = 'Evaluate Answer';
+            }
+        });
+    </script>
+</body>
+</html> 

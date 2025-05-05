@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local WebLLM Test</title>
+    <!-- Use locally saved library -->
+    <script src="/assets/web-llm.umd.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1, h2 {
+            color: #2563eb;
+        }
+        
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f3f4f6;
+        }
+        
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        
+        .loading {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .links {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Local WebLLM Test</h1>
+    <p>Testing WebLLM with locally saved library file.</p>
+    
+    <div class="card">
+        <h2>Library Status</h2>
+        <p id="library-status">
+            <span id="lib-indicator" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #f87171; margin-right: 5px;"></span>
+            WebLLM library: <span id="lib-status">Checking...</span>
+        </p>
+    </div>
+    
+    <div class="card">
+        <h2>Model Initialization</h2>
+        <p>Status: <span id="status">Not initialized</span></p>
+        <div id="error-container" class="error" style="display: none;"></div>
+        <button id="init-button">Initialize LLM</button>
+        <div id="progress" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="card" id="question-card" style="display: none;">
+        <h2>Generate Interview Question</h2>
+        <p>Click the button to generate a sample interview question for a Frontend Developer position.</p>
+        <button id="generate-button">Generate Question</button>
+        <div id="question-container" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="links">
+        <a href="/llm-test-link.html">← Back to Test Links</a>
+    </div>
+    
+    <script>
+        // Check if WebLLM is loaded
+        const libIndicator = document.getElementById('lib-indicator');
+        const libStatus = document.getElementById('lib-status');
+        
+        if (typeof WebLLM !== 'undefined') {
+            libIndicator.style.backgroundColor = '#34d399';
+            libStatus.textContent = 'Loaded successfully';
+        } else {
+            libIndicator.style.backgroundColor = '#f87171';
+            libStatus.textContent = 'Not loaded. Please ensure web-llm.umd.js is saved in /assets/ directory';
+        }
+        
+        // Elements
+        const statusEl = document.getElementById('status');
+        const errorContainerEl = document.getElementById('error-container');
+        const initButtonEl = document.getElementById('init-button');
+        const progressEl = document.getElementById('progress');
+        const questionCardEl = document.getElementById('question-card');
+        const generateButtonEl = document.getElementById('generate-button');
+        const questionContainerEl = document.getElementById('question-container');
+        
+        let llm = null;
+        
+        // Initialize LLM
+        initButtonEl.addEventListener('click', async () => {
+            if (typeof WebLLM === 'undefined') {
+                errorContainerEl.textContent = 'WebLLM library not loaded. Please ensure web-llm.umd.js is saved in /assets/ directory';
+                errorContainerEl.style.display = 'block';
+                return;
+            }
+            
+            statusEl.textContent = 'Initializing...';
+            errorContainerEl.style.display = 'none';
+            initButtonEl.disabled = true;
+            progressEl.textContent = 'Starting initialization...';
+            progressEl.style.display = 'block';
+            progressEl.className = 'status loading';
+            
+            try {
+                llm = new WebLLM();
+                
+                // Set progress callback
+                llm.setProgressCallback((current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    progressEl.textContent = `Loading model: ${percent}% (${current}/${total})`;
+                });
+                
+                await llm.reload({
+                    model: 'Phi-2:Q4_K_M',
+                    modelUrl: 'https://huggingface.co/mlc-ai/phi-2-q4km/resolve/main/',
+                    maxTokens: 768
+                });
+                
+                statusEl.textContent = 'Initialized successfully!';
+                progressEl.textContent = 'Model loaded successfully';
+                progressEl.className = 'status success';
+                questionCardEl.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error initializing LLM:', error);
+                errorContainerEl.textContent = `Error initializing LLM: ${error.message || error}`;
+                errorContainerEl.style.display = 'block';
+                statusEl.textContent = 'Error during initialization';
+                progressEl.className = 'status error';
+                progressEl.textContent = 'Failed to initialize model';
+                initButtonEl.disabled = false;
+            }
+        });
+        
+        // Generate question
+        generateButtonEl.addEventListener('click', async () => {
+            if (!llm) return;
+            
+            generateButtonEl.disabled = true;
+            questionContainerEl.style.display = 'none';
+            
+            try {
+                const prompt = `
+Generate a professional interview question for a Frontend Developer position.
+The question should test both technical knowledge and problem-solving skills relevant to React, TypeScript, and modern web technologies.
+Keep your response concise and formatted as just the question text.
+`;
+
+                questionContainerEl.textContent = 'Generating...';
+                questionContainerEl.style.display = 'block';
+                questionContainerEl.className = 'status loading';
+                
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 256,
+                    temperature: 0.7
+                });
+                
+                // Display the question
+                questionContainerEl.textContent = response.output.trim();
+                questionContainerEl.className = 'status success';
+                
+            } catch (error) {
+                console.error('Error generating question:', error);
+                questionContainerEl.textContent = `Error: ${error.message || error}`;
+                questionContainerEl.style.display = 'block';
+                questionContainerEl.className = 'status error';
+            } finally {
+                generateButtonEl.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html> 

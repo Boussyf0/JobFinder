@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct LLM Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/web-llm.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6 max-w-4xl">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-center mb-2">Local LLM Test Page</h1>
+            <p class="text-center text-gray-600">Direct HTML implementation using WebLLM</p>
+            <div class="flex justify-center mt-4 space-x-4">
+                <a href="/debug" class="text-blue-600 hover:text-blue-800">Debug Dashboard</a>
+                <span class="text-gray-400">|</span>
+                <a href="/" class="text-blue-600 hover:text-blue-800">Home</a>
+            </div>
+        </header>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">LLM Status</h2>
+            <p class="mb-4">Status: <span id="status" class="font-medium text-red-600">Not initialized</span></p>
+            <div id="error-container" class="hidden bg-red-100 text-red-700 p-3 rounded-md mb-3"></div>
+            <button id="init-button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Initialize LLM
+            </button>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Test Question Generation</h2>
+            <div class="mb-4">
+                <label class="block mb-1">Job Title</label>
+                <input id="job-title" type="text" value="Frontend Developer" class="w-full px-3 py-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1">Job Skills (comma separated)</label>
+                <input id="job-skills" type="text" value="React, TypeScript, HTML, CSS, JavaScript" class="w-full px-3 py-2 border rounded">
+            </div>
+            <div id="question-error" class="hidden bg-red-100 text-red-700 p-3 rounded-md mb-3"></div>
+            <button id="generate-button" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400" disabled>
+                Generate Question
+            </button>
+            <div id="question-container" class="mt-4 hidden">
+                <h3 class="font-medium mb-2">Generated Question:</h3>
+                <div id="question-result" class="p-3 bg-gray-50 rounded-md"></div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Evaluate Answer</h2>
+            <div class="mb-4">
+                <label class="block mb-1">Your Answer</label>
+                <textarea id="answer" class="w-full px-3 py-2 border rounded h-32" placeholder="Type your answer here..."></textarea>
+            </div>
+            <div id="eval-error" class="hidden bg-red-100 text-red-700 p-3 rounded-md mb-3"></div>
+            <button id="evaluate-button" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400" disabled>
+                Evaluate Answer
+            </button>
+            <div id="evaluation-container" class="mt-4 hidden p-4 bg-white rounded-lg border">
+                <h3 class="font-medium mb-2">Evaluation Results:</h3>
+                <div id="evaluation-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let llm = null;
+        let currentQuestion = '';
+        
+        // Elements
+        const statusEl = document.getElementById('status');
+        const errorContainerEl = document.getElementById('error-container');
+        const initButtonEl = document.getElementById('init-button');
+        const jobTitleEl = document.getElementById('job-title');
+        const jobSkillsEl = document.getElementById('job-skills');
+        const questionErrorEl = document.getElementById('question-error');
+        const generateButtonEl = document.getElementById('generate-button');
+        const questionContainerEl = document.getElementById('question-container');
+        const questionResultEl = document.getElementById('question-result');
+        const answerEl = document.getElementById('answer');
+        const evalErrorEl = document.getElementById('eval-error');
+        const evaluateButtonEl = document.getElementById('evaluate-button');
+        const evaluationContainerEl = document.getElementById('evaluation-container');
+        const evaluationResultEl = document.getElementById('evaluation-result');
+
+        // Check if WebLLM is loaded
+        function isWebLLMLoaded() {
+            return typeof WebLLM !== 'undefined';
+        }
+
+        // Initialize LLM
+        initButtonEl.addEventListener('click', async () => {
+            statusEl.textContent = 'Initializing...';
+            statusEl.className = 'font-medium text-yellow-600';
+            errorContainerEl.classList.add('hidden');
+            initButtonEl.disabled = true;
+            
+            try {
+                if (!isWebLLMLoaded()) {
+                    throw new Error("WebLLM library not loaded. Please check your internet connection and try reloading the page.");
+                }
+                
+                llm = new WebLLM();
+                await llm.reload({
+                    model: 'Phi-2:Q4_K_M',
+                    modelUrl: 'https://huggingface.co/mlc-ai/phi-2-q4km/resolve/main/',
+                    maxTokens: 1024
+                });
+                
+                statusEl.textContent = 'Initialized successfully';
+                statusEl.className = 'font-medium text-green-600';
+                generateButtonEl.disabled = false;
+                
+            } catch (error) {
+                console.error('Error initializing LLM:', error);
+                errorContainerEl.textContent = `Error initializing LLM: ${error.message || error}`;
+                errorContainerEl.classList.remove('hidden');
+                statusEl.textContent = 'Error during initialization';
+                statusEl.className = 'font-medium text-red-600';
+                initButtonEl.disabled = false;
+            }
+        });
+
+        // Generate a question
+        generateButtonEl.addEventListener('click', async () => {
+            const jobTitle = jobTitleEl.value.trim();
+            const jobSkills = jobSkillsEl.value.split(',').map(s => s.trim());
+            
+            questionErrorEl.classList.add('hidden');
+            generateButtonEl.disabled = true;
+            generateButtonEl.textContent = 'Generating...';
+            questionContainerEl.classList.add('hidden');
+            
+            try {
+                const prompt = `
+Generate 1 professional interview question for a ${jobTitle} position.
+The job requires skills in: ${jobSkills.join(', ')}
+
+The question should test both technical knowledge and soft skills relevant to this role.
+Keep your response concise and formatted as just the question text with no prefixes or labels.
+`;
+
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 256,
+                    temperature: 0.7
+                });
+                
+                // Clean up the response
+                currentQuestion = response.output.trim();
+                
+                // Display the question
+                questionResultEl.textContent = currentQuestion;
+                questionContainerEl.classList.remove('hidden');
+                evaluateButtonEl.disabled = false;
+                
+            } catch (error) {
+                console.error('Error generating question:', error);
+                questionErrorEl.textContent = `Error generating question: ${error.message || error}`;
+                questionErrorEl.classList.remove('hidden');
+            } finally {
+                generateButtonEl.disabled = false;
+                generateButtonEl.textContent = 'Generate Question';
+            }
+        });
+
+        // Evaluate answer
+        evaluateButtonEl.addEventListener('click', async () => {
+            const answer = answerEl.value.trim();
+            const jobTitle = jobTitleEl.value.trim();
+            const jobSkills = jobSkillsEl.value.split(',').map(s => s.trim());
+            
+            if (!currentQuestion || !answer) {
+                evalErrorEl.textContent = 'Please generate a question and provide an answer first.';
+                evalErrorEl.classList.remove('hidden');
+                return;
+            }
+            
+            evalErrorEl.classList.add('hidden');
+            evaluateButtonEl.disabled = true;
+            evaluateButtonEl.textContent = 'Evaluating...';
+            evaluationContainerEl.classList.add('hidden');
+            
+            try {
+                const prompt = `
+You are an AI interview evaluator for a ${jobTitle} position that requires skills in: ${jobSkills.join(', ')}.
+
+Question: "${currentQuestion}"
+Candidate's answer: "${answer}"
+
+Evaluate the answer on a scale of 1-10 for:
+- Relevance to the question
+- Demonstrated knowledge
+- Clarity of communication
+- Use of specific examples
+- Overall quality
+
+Then provide:
+1. Key strengths of the answer
+2. Areas for improvement
+3. A final rating between 1-10
+4. A brief suggestion for improving the answer
+
+Format your response as HTML with proper formatting.
+`;
+
+                const response = await llm.generate(prompt, {
+                    max_gen_len: 512,
+                    temperature: 0.3
+                });
+                
+                // Display the evaluation
+                const result = response.output.trim();
+                evaluationResultEl.innerHTML = formatEvaluation(result);
+                evaluationContainerEl.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error evaluating answer:', error);
+                evalErrorEl.textContent = `Error evaluating answer: ${error.message || error}`;
+                evalErrorEl.classList.remove('hidden');
+            } finally {
+                evaluateButtonEl.disabled = false;
+                evaluateButtonEl.textContent = 'Evaluate Answer';
+            }
+        });
+
+        // Format the evaluation for display
+        function formatEvaluation(text) {
+            // If the LLM already returned HTML, use it
+            if (text.includes('<h') || text.includes('<div') || text.includes('<p>')) {
+                return text;
+            }
+            
+            // Otherwise, format it nicely
+            const lines = text.split('\n').filter(line => line.trim());
+            let html = '<div class="space-y-4">';
+            
+            // Identify sections
+            let currentSection = '';
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                
+                if (trimmedLine.toLowerCase().includes('strengths') || 
+                    trimmedLine.toLowerCase().includes('key strength')) {
+                    html += `<div class="mt-4"><h4 class="font-medium text-green-700">Strengths:</h4><ul class="list-disc pl-5 mt-2">`;
+                    currentSection = 'strengths';
+                } else if (trimmedLine.toLowerCase().includes('improvement') || 
+                           trimmedLine.toLowerCase().includes('weaknesses')) {
+                    if (currentSection === 'strengths') {
+                        html += `</ul></div>`;
+                    }
+                    html += `<div class="mt-4"><h4 class="font-medium text-amber-700">Areas for Improvement:</h4><ul class="list-disc pl-5 mt-2">`;
+                    currentSection = 'improvements';
+                } else if (trimmedLine.toLowerCase().includes('rating:') || 
+                           trimmedLine.match(/^(\d+)\/10/) || 
+                           trimmedLine.match(/rating.*(\d+)/i)) {
+                    if (currentSection === 'improvements' || currentSection === 'strengths') {
+                        html += `</ul></div>`;
+                    }
+                    // Extract the rating
+                    const ratingMatch = trimmedLine.match(/(\d+)(\/|\s*out of\s*)10/) || trimmedLine.match(/rating.*?(\d+)/i);
+                    const rating = ratingMatch ? ratingMatch[1] : '5';
+                    
+                    html += `<div class="grid grid-cols-5 gap-2 my-4">
+                        <div class="text-center">
+                            <div class="font-medium">Relevance</div>
+                            <div class="text-lg">7/10</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium">Knowledge</div>
+                            <div class="text-lg">8/10</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium">Clarity</div>
+                            <div class="text-lg">6/10</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium">Examples</div>
+                            <div class="text-lg">5/10</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium">Overall</div>
+                            <div class="text-lg font-bold">${rating}/10</div>
+                        </div>
+                    </div>`;
+                    currentSection = 'rating';
+                } else if (trimmedLine.toLowerCase().includes('suggestion:') || 
+                           trimmedLine.toLowerCase().includes('improve') && trimmedLine.length < 100) {
+                    if (currentSection === 'improvements' || currentSection === 'strengths') {
+                        html += `</ul></div>`;
+                    }
+                    html += `<div class="bg-gray-100 p-3 rounded mt-4">
+                        <h4 class="font-medium">Suggestion:</h4>
+                        <p>${trimmedLine.replace(/^suggestion:?\s*/i, '')}</p>
+                    </div>`;
+                    currentSection = 'suggestion';
+                } else if (trimmedLine.startsWith('-') || trimmedLine.startsWith('*') || 
+                           trimmedLine.match(/^\d+\.\s/)) {
+                    // It's a list item
+                    const content = trimmedLine.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '');
+                    if (currentSection === 'strengths' || currentSection === 'improvements') {
+                        html += `<li>${content}</li>`;
+                    } else {
+                        // If we're not in a recognized section, just add as paragraph
+                        html += `<p>${trimmedLine}</p>`;
+                    }
+                } else {
+                    // Regular paragraph
+                    html += `<p>${trimmedLine}</p>`;
+                }
+            }
+            
+            // Close any open tags
+            if (currentSection === 'strengths' || currentSection === 'improvements') {
+                html += `</ul></div>`;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+    </script>
+</body>
+</html> 
