@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    button {
+      padding: 10px 15px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 5px;
+      overflow: auto;
+    }
+    .error {
+      color: red;
+    }
+    .section {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      margin-bottom: 10px;
+      min-height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <h1>API Test Page</h1>
+  
+  <div class="section">
+    <h2>Behavior Analysis API Test</h2>
+    <div>
+      <button id="testButton">Test API</button>
+      <button id="clearButton">Test Clear Session</button>
+    </div>
+    
+    <div id="result">
+      <h3>Result:</h3>
+      <pre id="resultContent">Click "Test API" to see the result</pre>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Interview Evaluation API Test</h2>
+    <div>
+      <h3>Question:</h3>
+      <textarea id="questionInput">Tell me about your experience with web development.</textarea>
+      
+      <h3>Answer:</h3>
+      <textarea id="answerInput">I have 5 years of experience with web development, primarily using React and Node.js. For example, I built a healthcare platform that helped doctors manage patient records more efficiently. First, I researched the problem space, then I created a prototype and iterated based on user feedback.</textarea>
+      
+      <div>
+        <button id="testInterviewButton">Test Interview Evaluation</button>
+      </div>
+    </div>
+    
+    <div id="interviewResult">
+      <h3>Result:</h3>
+      <pre id="interviewResultContent">Enter a question and answer, then click "Test Interview Evaluation"</pre>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Coding Evaluation API Test</h2>
+    <div>
+      <button id="testCodingButton">Test Coding API</button>
+    </div>
+    
+    <div id="codingResult">
+      <h3>Result:</h3>
+      <pre id="codingResultContent">Click "Test Coding API" to see the result</pre>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('testButton').addEventListener('click', async () => {
+      try {
+        // Generate a random session ID
+        const sessionId = 'test-' + Math.random().toString(36).substring(2, 10);
+        
+        // Make the API call
+        const response = await fetch('http://localhost:3008/api/interview/analyze-behavior', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            clear_session: false
+          })
+        });
+        
+        // Check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        
+        // Display the result
+        document.getElementById('resultContent').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('resultContent').className = '';
+      } catch (error) {
+        // Display the error
+        document.getElementById('resultContent').textContent = `Error: ${error.message}`;
+        document.getElementById('resultContent').className = 'error';
+      }
+    });
+    
+    document.getElementById('clearButton').addEventListener('click', async () => {
+      try {
+        // Generate a random session ID
+        const sessionId = 'test-' + Math.random().toString(36).substring(2, 10);
+        
+        // Make the API call
+        const response = await fetch('http://localhost:3008/api/interview/analyze-behavior', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            clear_session: true
+          })
+        });
+        
+        // Check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        
+        // Display the result
+        document.getElementById('resultContent').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('resultContent').className = '';
+      } catch (error) {
+        // Display the error
+        document.getElementById('resultContent').textContent = `Error: ${error.message}`;
+        document.getElementById('resultContent').className = 'error';
+      }
+    });
+    
+    document.getElementById('testInterviewButton').addEventListener('click', async () => {
+      try {
+        // Generate a random job ID
+        const jobId = 'job-' + Math.random().toString(36).substring(2, 10);
+        
+        // Get question and answer from textareas
+        const question = document.getElementById('questionInput').value;
+        const answer = document.getElementById('answerInput').value;
+        
+        // Make the API call
+        const response = await fetch('http://localhost:3008/api/interview/evaluate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            job_id: jobId,
+            question,
+            answer
+          })
+        });
+        
+        // Check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        
+        // Display the result
+        document.getElementById('interviewResultContent').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('interviewResultContent').className = '';
+      } catch (error) {
+        // Display the error
+        document.getElementById('interviewResultContent').textContent = `Error: ${error.message}`;
+        document.getElementById('interviewResultContent').className = 'error';
+      }
+    });
+    
+    document.getElementById('testCodingButton').addEventListener('click', async () => {
+      try {
+        // Generate a random job ID
+        const jobId = 'job-' + Math.random().toString(36).substring(2, 10);
+        
+        // Sample coding problem and solution
+        const problem = "Write a function that returns the sum of two numbers";
+        const solution = `function sum(a, b) {
+  return a + b;
+}`;
+        
+        // Make the API call
+        const response = await fetch('http://localhost:3008/api/interview/coding', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            job_id: jobId,
+            problem,
+            solution,
+            language: 'javascript'
+          })
+        });
+        
+        // Check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // Parse the response
+        const data = await response.json();
+        
+        // Display the result
+        document.getElementById('codingResultContent').textContent = JSON.stringify(data, null, 2);
+        document.getElementById('codingResultContent').className = '';
+      } catch (error) {
+        // Display the error
+        document.getElementById('codingResultContent').textContent = `Error: ${error.message}`;
+        document.getElementById('codingResultContent').className = 'error';
+      }
+    });
+  </script>
+</body>
+</html> 

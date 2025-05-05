@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.78",
+    "@radix-ui/react-tabs": "^1.0.4",
+    "@types/uuid": "^10.0.0",
+    "body-parser": "^2.2.0",
+    "clsx": "^2.1.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "recharts": "^2.12.2",
+    "tailwind-merge": "^2.3.0",
+    "uuid": "^11.1.0"
+  }
+}
