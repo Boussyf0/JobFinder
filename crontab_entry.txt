@@ -1,0 +1,2 @@
+# Run the job scraper every 6 hours (at midnight, 6am, noon, and 6pm)
+0 */6 * * * /Users/abderrahim_boussyf/Ai_project/Scraping/run_job_scraper.sh >> /Users/abderrahim_boussyf/Ai_project/Scraping/logs/cron.log 2>&1 
