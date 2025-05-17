@@ -1,0 +1,8 @@
+selenium>=4.9.0
+webdriver-manager>=3.8.6
+selenium-stealth>=1.0.6
+pandas>=1.5.3
+sentence-transformers
+faiss-cpu
+Flask
+Flask-CORS 

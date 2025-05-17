@@ -1,0 +1,16 @@
+title,dept_category,job_type,experience_years,is_remote,is_hybrid,is_fulltime,is_contract,skills_count,is_senior,is_junior,is_manager,predicted_salary
+Junior Software Developer,IT & Technology,full_time,1,0,0,1,0,3,0,1,0,53213.02254589959
+Mid-level Software Engineer,IT & Technology,full_time,3,0,1,1,0,5,0,0,0,78189.1297102411
+Senior Software Engineer,IT & Technology,full_time,7,0,0,1,0,8,1,0,0,96272.8748356469
+Senior Software Engineer (Remote),IT & Technology,full_time,7,1,0,1,0,8,1,0,0,85180.3299207759
+Data Scientist,Data Science,full_time,3,0,0,1,0,5,0,0,0,90450.06863604368
+Senior Data Scientist,Data Science,full_time,6,1,0,1,0,8,1,0,0,93746.35915116116
+DevOps Engineer,IT & Technology,full_time,4,1,0,1,0,7,0,0,0,72840.0886955123
+Frontend Developer,IT & Technology,full_time,2,0,1,1,0,4,0,0,0,67460.4490918929
+Engineering Manager,IT & Technology,full_time,8,0,0,1,0,6,0,0,1,86585.40804739088
+Chief Technology Officer,IT & Technology,full_time,12,0,0,1,0,10,1,0,1,121878.55429325948
+Marketing Specialist,Marketing,full_time,3,0,0,1,0,4,0,0,0,52877.98698547462
+Electrical Engineer,Electrical Engineering,full_time,5,0,0,1,0,5,0,0,0,58569.53333296979
+Civil Engineer,Civil Engineering,full_time,4,0,0,1,0,4,0,0,0,53165.23129946619
+Finance Analyst,Finance & Accounting,full_time,3,0,0,1,0,3,0,0,0,57756.28695203132
+Freelance Web Developer,IT & Technology,freelance,3,1,0,0,1,5,0,0,0,75452.50204177812
