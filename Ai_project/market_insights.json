@@ -1,0 +1,158 @@
+{
+  "summary": {
+    "totalJobs": 311,
+    "avgSalary": 82516,
+    "itMarketShare": 33,
+    "topLocation": "Casablanca",
+    "remotePercentage": 1
+  },
+  "salaryByRole": [
+    {
+      "name": "Junior Dev",
+      "salary": 53213
+    },
+    {
+      "name": "Mid-level Dev",
+      "salary": 78189
+    },
+    {
+      "name": "Senior Dev",
+      "salary": 96273
+    },
+    {
+      "name": "DevOps",
+      "salary": 72840
+    },
+    {
+      "name": "Data Scientist",
+      "salary": 90450
+    },
+    {
+      "name": "Network Engineer",
+      "salary": 65780
+    },
+    {
+      "name": "Project Manager",
+      "salary": 86585
+    },
+    {
+      "name": "UX/UI Designer",
+      "salary": 68940
+    },
+    {
+      "name": "QA Engineer",
+      "salary": 60120
+    },
+    {
+      "name": "Security Engineer",
+      "salary": 88930
+    },
+    {
+      "name": "Engineering Manager",
+      "salary": 107000
+    },
+    {
+      "name": "CTO",
+      "salary": 121879
+    }
+  ],
+  "jobsByIndustry": [
+    {
+      "name": "IT & Technology",
+      "value": 34
+    },
+    {
+      "name": "Other",
+      "value": 29
+    },
+    {
+      "name": "Industrial Engineering",
+      "value": 19
+    },
+    {
+      "name": "Electrical Engineering",
+      "value": 18
+    }
+  ],
+  "jobTrends": [
+    {
+      "month": "Jan",
+      "jobs": 1200
+    },
+    {
+      "month": "Feb",
+      "jobs": 1310
+    },
+    {
+      "month": "Mar",
+      "jobs": 1410
+    },
+    {
+      "month": "Apr",
+      "jobs": 1560
+    },
+    {
+      "month": "May",
+      "jobs": 1720
+    },
+    {
+      "month": "Jun",
+      "jobs": 1900
+    },
+    {
+      "month": "Jul",
+      "jobs": 2010
+    },
+    {
+      "month": "Aug",
+      "jobs": 2250
+    },
+    {
+      "month": "Sep",
+      "jobs": 2560
+    },
+    {
+      "month": "Oct",
+      "jobs": 2820
+    },
+    {
+      "month": "Nov",
+      "jobs": 2950
+    },
+    {
+      "month": "Dec",
+      "jobs": 2960
+    }
+  ],
+  "skillDemand": [
+    {
+      "name": "fullstack",
+      "value": 19
+    },
+    {
+      "name": "python",
+      "value": 2
+    },
+    {
+      "name": "aws",
+      "value": 2
+    },
+    {
+      "name": "java",
+      "value": 2
+    },
+    {
+      "name": "react",
+      "value": 2
+    }
+  ],
+  "topCities": [],
+  "modelMetrics": {
+    "modelType": "LightGBM",
+    "r2Score": 0.2429,
+    "mae": 26704.01,
+    "percentError": 40.03
+  },
+  "lastUpdated": "2025-05-04 22:33:45",
+  "dataSource": "indeed_jobs_detailed.csv"
+}
