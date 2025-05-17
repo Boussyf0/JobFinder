@@ -1,0 +1,5 @@
+[2025-05-14 02:27:35] Starting job scraper cron job
+[2025-05-14 02:27:35] Working directory: /Users/abderrahim_boussyf/Ai_project/Scraping
+[2025-05-14 02:27:35] No virtual environment found, using system Python
+[2025-05-14 02:27:35] Running job scraper script
+[2025-05-14 02:27:36] ERROR: Job scraper failed with exit code 1

@@ -1,0 +1,11 @@
+[2025-05-14 08:44:35] Starting job scraper cron job
+[2025-05-14 08:44:35] Working directory: /Users/abderrahim_boussyf/Ai_project/Scraping
+[2025-05-14 08:44:35] Using conda environment: Elect_24
+[2025-05-14 08:44:35] Running job scraper script
+[2025-05-14 14:38:48] Job scraper completed successfully
+[2025-05-14 14:38:48] Ensuring vector store is updated
+[2025-05-14 15:11:55] Stopping existing API server (PID: 1433
+6046)
+[2025-05-14 15:11:57] Starting API server
+[2025-05-14 15:11:57] API server started with PID: 40649
+[2025-05-14 15:11:57] Cron job completed successfully
